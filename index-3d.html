@@ -1,0 +1,24 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <title>Stained Glass 3D</title>
+    <style>
+      html, body { margin: 0; height: 100%; background: #ece9e3; color: #222; font-family: -apple-system, system-ui, Segoe UI, Roboto, Helvetica, Arial; }
+      #app { position: relative; width: 100%; height: 100%; overflow: hidden; display: grid; place-items: center; }
+      .ui { position: absolute; top: 10px; left: 10px; background: rgba(255,255,255,0.75); padding: 8px 10px; border-radius: 6px; font-size: 13px; box-shadow: 0 4px 14px rgba(0,0,0,0.1); }
+      .ui code { background: #fff; padding: 1px 6px; border-radius: 4px; }
+      canvas { display: block; }
+    </style>
+    <script src="palettes.js"></script>
+  </head>
+  <body>
+    <div id="app">
+      <div class="ui">Seed: <code id="seedLabel">...</code> — Press <code>N</code> new seed, <code>S</code> save. Switch size via <code>?w=1200&h=1600&seed=1234&cells=140</code></div>
+    </div>
+    <script type="module" src="glass3d.js"></script>
+  </body>
+  </html>
+
+
