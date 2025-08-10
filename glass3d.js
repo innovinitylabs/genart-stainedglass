@@ -9,6 +9,7 @@ import * as THREE from 'three';
 import { OrbitControls } from 'three/addons/controls/OrbitControls.js';
 import { RoomEnvironment } from 'three/addons/environments/RoomEnvironment.js';
 import { RectAreaLightUniformsLib } from 'three/addons/lights/RectAreaLightUniformsLib.js';
+import { Delaunay } from 'd3-delaunay';
 
 let seed = 1;
 let renderer, scene, camera, controls;
@@ -96,9 +97,10 @@ function generatePanel() {
   // Panel dimensions in world units
   const W = 1.6, H = 2.2, Z = 0.05;
 
-  // Generate jittered seeds
-  const cols = Math.max(3, Math.round(Math.sqrt(cells / (H / W))));
-  const rows = Math.max(3, Math.round(cols * (H / W)));
+  // Generate jittered seeds and compute Voronoi for authentic tessellation
+  const aspect = H / W;
+  const cols = Math.max(3, Math.round(Math.sqrt(cells / aspect)));
+  const rows = Math.max(3, Math.round(cols * aspect));
   const gw = W / cols, gh = H / rows;
   const seeds = [];
   for (let j = 0; j < rows; j++) {
@@ -108,14 +110,17 @@ function generatePanel() {
       seeds.push([x, y]);
     }
   }
-  // Build polygons via simple Lloyd-like relaxation (few steps) for nicer shapes
-  // Minimal: use Delaunay/Voronoi ersatz by splitting grid — we’ll approximate cells as quads/triangles around seeds
-  // For realism without heavy deps, create random convex polygons per seed
-  const cellsPolys = makeSimplePolys(seeds, gw, gh);
+  const del = Delaunay.from(seeds);
+  const vor = del.voronoi([-W/2, -H/2, W/2, H/2]);
+  const cellsPolys = [];
+  for (let i = 0; i < seeds.length; i++) {
+    const poly = vor.cellPolygon(i);
+    if (poly && poly.length >= 3) cellsPolys.push(poly);
+  }
 
   // Materials
-  const leadMatBase = new THREE.MeshStandardMaterial({ color: 0x222a2e, roughness: 0.6, metalness: 0.1, envMapIntensity: 0.8 });
-  const leadMatTop = new THREE.MeshStandardMaterial({ color: 0x12181b, roughness: 0.5, metalness: 0.15, envMapIntensity: 1.0 });
+  const leadMatBase = new THREE.MeshStandardMaterial({ color: 0x2a3438, roughness: 0.7, metalness: 0.05, envMapIntensity: 0.6 });
+  const leadMatTop = new THREE.MeshStandardMaterial({ color: 0x161c1f, roughness: 0.5, metalness: 0.1, envMapIntensity: 0.9 });
 
   // Backboard to catch transmitted light
   const backMat = new THREE.MeshStandardMaterial({ color: 0xf5f2ec, roughness: 0.9, metalness: 0.0 });
@@ -181,9 +186,7 @@ function generatePanel() {
   panelGroup.add(area2);
 
   // Debug: always add a visible test cube so we confirm rendering
-  const test = new THREE.Mesh(new THREE.BoxGeometry(0.2, 0.2, 0.2), new THREE.MeshStandardMaterial({ color: 0xff4444, roughness: 0.4 }));
-  test.position.set(0, 0, 0.05);
-  panelGroup.add(test);
+  // remove debug cube now that we render
 }
 
 function makeSimplePolys(seeds, gw, gh) {
