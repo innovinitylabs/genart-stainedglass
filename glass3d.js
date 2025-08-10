@@ -6,9 +6,9 @@
 */
 
 import * as THREE from 'https://unpkg.com/three@0.161.0/build/three.module.js';
-import { OrbitControls } from 'https://unpkg.com/three@0.161.0/examples/jsm/controls/OrbitControls.js';
-import { RoomEnvironment } from 'https://unpkg.com/three@0.161.0/examples/jsm/environments/RoomEnvironment.js';
-import { RectAreaLightUniformsLib } from 'https://unpkg.com/three@0.161.0/examples/jsm/lights/RectAreaLightUniformsLib.js';
+import { OrbitControls } from 'https://unpkg.com/three@0.161.0/examples/jsm/controls/OrbitControls.js?module';
+import { RoomEnvironment } from 'https://unpkg.com/three@0.161.0/examples/jsm/environments/RoomEnvironment.js?module';
+import { RectAreaLightUniformsLib } from 'https://unpkg.com/three@0.161.0/examples/jsm/lights/RectAreaLightUniformsLib.js?module';
 
 let seed = 1;
 let renderer, scene, camera, controls;
