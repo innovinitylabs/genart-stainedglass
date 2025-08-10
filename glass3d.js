@@ -15,6 +15,7 @@ let seed = 1;
 let renderer, scene, camera, controls;
 let panelGroup;
 let cellsParam = 140;
+let rippleNormalTex = null;
 
 function params() {
   const q = new URLSearchParams(location.search);
@@ -64,6 +65,7 @@ function init() {
   controls.enableZoom = false;
 
   RectAreaLightUniformsLib.init();
+  rippleNormalTex = createRippleNormalTexture(256);
   generatePanel();
 
   window.addEventListener('resize', onResize);
@@ -161,18 +163,20 @@ function generatePanel() {
     const col = new THREE.Color(hex);
     const glass = new THREE.MeshPhysicalMaterial({
       color: col,
-      roughness: rrange(0.15, 0.45),
+      roughness: rrange(0.1, 0.35),
       metalness: 0.0,
       transmission: 1.0,
       ior: rrange(1.48, 1.55),
-      thickness: rrange(0.01, 0.06),
+      thickness: rrange(0.03, 0.09),
       reflectivity: 0.5,
       envMapIntensity: 1.0,
       clearcoat: 0.3,
       clearcoatRoughness: 0.25,
       attenuationColor: col,
       attenuationDistance: rrange(0.4, 1.0),
-      side: THREE.DoubleSide
+      side: THREE.DoubleSide,
+      normalMap: rippleNormalTex,
+      normalScale: new THREE.Vector2(rrange(0.25, 0.5), rrange(0.25, 0.5))
     });
 
     const mesh = new THREE.Mesh(extrude, glass);
@@ -189,7 +193,7 @@ function generatePanel() {
   const area2 = new THREE.RectAreaLight(0xfff3d0, 2.2, 3.0, 3.0);
   area2.position.set(-1.0, -0.8, 0.8);
   panelGroup.add(area2);
-  const backLight = new THREE.RectAreaLight(0xffffff, 4.0, 3.0, 3.0);
+  const backLight = new THREE.RectAreaLight(0xffffff, 5.0, 3.0, 3.0);
   backLight.position.set(0, 0, -0.5);
   backLight.lookAt(0, 0, 0);
   panelGroup.add(backLight);
@@ -257,6 +261,32 @@ function animate() {
   requestAnimationFrame(animate);
 }
 
+function createRippleNormalTexture(size){
+  const cvs = document.createElement('canvas');
+  cvs.width = cvs.height = size;
+  const ctx = cvs.getContext('2d');
+  // draw multiple concentric swirl stamps to emulate cathedral glass
+  ctx.fillStyle = '#8080ff';
+  ctx.fillRect(0,0,size,size);
+  const rings = 36;
+  for (let i = 0; i < rings; i++) {
+    const x = Math.random()*size;
+    const y = Math.random()*size;
+    const r = 10 + Math.random()*40;
+    const g = ctx.createRadialGradient(x,y,0,x,y,r);
+    g.addColorStop(0, 'rgba(128,128,255,0.8)');
+    g.addColorStop(1, 'rgba(128,128,255,0)');
+    ctx.fillStyle = g;
+    ctx.beginPath();
+    ctx.arc(x,y,r,0,Math.PI*2);
+    ctx.fill();
+  }
+  const tex = new THREE.CanvasTexture(cvs);
+  tex.wrapS = tex.wrapT = THREE.RepeatWrapping;
+  tex.repeat.set(3,3);
+  tex.needsUpdate = true;
+  return tex;
+}
 // bootstrap
 (function main(){ const { seed: s } = { seed }; reseed(s); init(); })();
 
