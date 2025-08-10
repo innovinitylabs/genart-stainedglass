@@ -42,6 +42,7 @@ function init() {
   renderer.toneMapping = THREE.ACESFilmicToneMapping;
   renderer.toneMappingExposure = 1.0;
   renderer.physicallyCorrectLights = true;
+  renderer.setClearColor(0xece9e3, 1);
   app.appendChild(renderer.domElement);
 
   scene = new THREE.Scene();
@@ -60,8 +61,8 @@ function init() {
   controls.enablePan = false;
   controls.enableZoom = false;
 
-  generatePanel();
   RectAreaLightUniformsLib.init();
+  generatePanel();
 
   window.addEventListener('resize', onResize);
   window.addEventListener('keydown', (e) => {
@@ -111,6 +112,12 @@ function generatePanel() {
   const leadMatBase = new THREE.MeshStandardMaterial({ color: 0x222a2e, roughness: 0.6, metalness: 0.1, envMapIntensity: 0.8 });
   const leadMatTop = new THREE.MeshStandardMaterial({ color: 0x12181b, roughness: 0.5, metalness: 0.15, envMapIntensity: 1.0 });
 
+  // Backboard to catch transmitted light
+  const backMat = new THREE.MeshStandardMaterial({ color: 0xf5f2ec, roughness: 0.9, metalness: 0.0 });
+  const back = new THREE.Mesh(new THREE.PlaneGeometry(W + 0.2, H + 0.2), backMat);
+  back.position.z = -0.2;
+  panelGroup.add(back);
+
   // Build lead network first (extruded thin strips)
   for (const e of edgesFromPolys(cellsPolys)) {
     const strip = makeLeadStrip(e.a, e.b, 0.018, Z);
@@ -159,6 +166,8 @@ function generatePanel() {
   }
 
   // Lights
+  const hemi = new THREE.HemisphereLight(0xffffff, 0x223344, 0.5);
+  scene.add(hemi);
   const area1 = new THREE.RectAreaLight(0xffffff, 3.0, 2.5, 2.5);
   area1.position.set(0.8, 0.9, 1.0);
   panelGroup.add(area1);
