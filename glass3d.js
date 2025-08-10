@@ -5,10 +5,10 @@
   - Deterministic via seed (?seed=..., ?cells=..., ?w=..., ?h=...)
 */
 
-import * as THREE from 'https://unpkg.com/three@0.161.0?module';
-import { OrbitControls } from 'https://unpkg.com/three@0.161.0/examples/jsm/controls/OrbitControls.js?module';
-import { RoomEnvironment } from 'https://unpkg.com/three@0.161.0/examples/jsm/environments/RoomEnvironment.js?module';
-import { RectAreaLightUniformsLib } from 'https://unpkg.com/three@0.161.0/examples/jsm/lights/RectAreaLightUniformsLib.js?module';
+import * as THREE from 'three';
+import { OrbitControls } from 'three/addons/controls/OrbitControls.js';
+import { RoomEnvironment } from 'three/addons/environments/RoomEnvironment.js';
+import { RectAreaLightUniformsLib } from 'three/addons/lights/RectAreaLightUniformsLib.js';
 
 let seed = 1;
 let renderer, scene, camera, controls;
@@ -47,9 +47,7 @@ function init() {
 
   scene = new THREE.Scene();
   const pmrem = new THREE.PMREMGenerator(renderer);
-  pmrem.compileEquirectangularShader();
-  const envScene = new RoomEnvironment();
-  const envRT = pmrem.fromScene(envScene, 0.04);
+  const envRT = pmrem.fromScene(new RoomEnvironment(), 0.04);
   scene.environment = envRT.texture;
 
   const aspect = h / w;
