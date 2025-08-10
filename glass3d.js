@@ -13,14 +13,15 @@ import { RectAreaLightUniformsLib } from 'three/addons/lights/RectAreaLightUnifo
 let seed = 1;
 let renderer, scene, camera, controls;
 let panelGroup;
+let cellsParam = 140;
 
 function params() {
   const q = new URLSearchParams(location.search);
   const w = parseInt(q.get('w') || 1200, 10);
   const h = parseInt(q.get('h') || 1600, 10);
   seed = parseInt(q.get('seed') || (Date.now() % 1e9), 10);
-  const cells = parseInt(q.get('cells') || 140, 10);
-  return { w, h, cells };
+  cellsParam = parseInt(q.get('cells') || 140, 10);
+  return { w, h };
 }
 
 // Minimal deterministic RNG
@@ -66,12 +67,16 @@ function init() {
 
   window.addEventListener('resize', onResize);
   window.addEventListener('keydown', (e) => {
-    if (e.key === 'n' || e.key === 'N') { reseed(Math.floor(rrange(0, 1e9))); regenerate(); }
+    if (e.key === 'n' || e.key === 'N') { newSeed(); }
     if (e.key === 's' || e.key === 'S') { save(); }
   });
+  document.getElementById('newBtn')?.addEventListener('click', newSeed);
+  document.getElementById('saveBtn')?.addEventListener('click', save);
   document.getElementById('seedLabel').textContent = String(seed);
   animate();
 }
+
+function newSeed(){ reseed(Math.floor(rrange(0, 1e9))); regenerate(); document.getElementById('seedLabel').textContent = String(seed); }
 
 function onResize() { /* static canvas size based on URL; omit dynamic */ }
 
@@ -84,7 +89,7 @@ function regenerate() {
 }
 
 function generatePanel() {
-  const { cells } = params();
+  const cells = cellsParam;
   panelGroup = new THREE.Group();
   scene.add(panelGroup);
 
@@ -131,7 +136,7 @@ function generatePanel() {
   }
 
   // Glass materials palette
-  const pal = (window.PALETTES?.[0]?.inks) || [ '#68a7d8', '#2b7aa7', '#e9c675', '#e36a6a', '#8dc5b0' ];
+  const pal = (window.PALETTES?.[0]?.inks) || [ '#5aa3c7', '#6bb0dd', '#2b7aa7', '#e9c675', '#e36a6a', '#8dc5b0' ];
 
   // Build shapes and glass slabs
   for (const poly of cellsPolys) {
@@ -140,7 +145,7 @@ function generatePanel() {
     for (let i = 1; i < poly.length; i++) shape.lineTo(poly[i][0], poly[i][1]);
     shape.closePath();
 
-    const extrude = new THREE.ExtrudeGeometry(shape, { depth: Z, bevelEnabled: true, bevelSize: 0.003, bevelThickness: 0.003, bevelSegments: 2 });
+    const extrude = new THREE.ExtrudeGeometry(shape, { depth: Z, bevelEnabled: true, bevelSize: 0.0025, bevelThickness: 0.004, bevelSegments: 2 });
 
     // Glass material per cell
     const hex = pal[Math.floor(rrange(0, pal.length))];
@@ -157,7 +162,7 @@ function generatePanel() {
       clearcoat: 0.3,
       clearcoatRoughness: 0.25,
       attenuationColor: col,
-      attenuationDistance: rrange(0.3, 1.2)
+      attenuationDistance: rrange(0.4, 1.0)
     });
 
     const mesh = new THREE.Mesh(extrude, glass);
