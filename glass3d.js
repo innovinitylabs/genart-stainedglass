@@ -5,9 +5,10 @@
   - Deterministic via seed (?seed=..., ?cells=..., ?w=..., ?h=...)
 */
 
-import * as THREE from 'https://cdn.skypack.dev/three@0.161.0/build/three.module.js';
-import { OrbitControls } from 'https://cdn.skypack.dev/three@0.161.0/examples/jsm/controls/OrbitControls.js';
-import { RoomEnvironment } from 'https://cdn.skypack.dev/three@0.161.0/examples/jsm/environments/RoomEnvironment.js';
+import * as THREE from 'https://unpkg.com/three@0.161.0/build/three.module.js';
+import { OrbitControls } from 'https://unpkg.com/three@0.161.0/examples/jsm/controls/OrbitControls.js';
+import { RoomEnvironment } from 'https://unpkg.com/three@0.161.0/examples/jsm/environments/RoomEnvironment.js';
+import { RectAreaLightUniformsLib } from 'https://unpkg.com/three@0.161.0/examples/jsm/lights/RectAreaLightUniformsLib.js';
 
 let seed = 1;
 let renderer, scene, camera, controls;
@@ -40,6 +41,7 @@ function init() {
   renderer.setPixelRatio(Math.min(devicePixelRatio, 2));
   renderer.toneMapping = THREE.ACESFilmicToneMapping;
   renderer.toneMappingExposure = 1.0;
+  renderer.physicallyCorrectLights = true;
   app.appendChild(renderer.domElement);
 
   scene = new THREE.Scene();
@@ -59,6 +61,7 @@ function init() {
   controls.enableZoom = false;
 
   generatePanel();
+  RectAreaLightUniformsLib.init();
 
   window.addEventListener('resize', onResize);
   window.addEventListener('keydown', (e) => {
@@ -123,11 +126,7 @@ function generatePanel() {
   // Glass materials palette
   const pal = (window.PALETTES?.[0]?.inks) || [ '#68a7d8', '#2b7aa7', '#e9c675', '#e36a6a', '#8dc5b0' ];
 
-  for (const poly of cellsPolys) {
-    const shape = new THREE.Shape(poly.map(([x,y],i)=> (i===0? new THREE.MoveTo(x,y): new THREE.LineTo(x,y)) ));
-    // three.js expects Path methods; create by manual commands
-  }
-  // Because using MoveTo/LineTo constructors is verbose, we’ll build the shape procedurally:
+  // Build shapes and glass slabs
   for (const poly of cellsPolys) {
     const shape = new THREE.Shape();
     shape.moveTo(poly[0][0], poly[0][1]);
