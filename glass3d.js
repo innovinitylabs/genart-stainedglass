@@ -174,6 +174,11 @@ function generatePanel() {
   const area2 = new THREE.RectAreaLight(0xfff3d0, 2.2, 3.0, 3.0);
   area2.position.set(-1.0, -0.8, 0.8);
   panelGroup.add(area2);
+
+  // Debug: always add a visible test cube so we confirm rendering
+  const test = new THREE.Mesh(new THREE.BoxGeometry(0.2, 0.2, 0.2), new THREE.MeshStandardMaterial({ color: 0xff4444, roughness: 0.4 }));
+  test.position.set(0, 0, 0.05);
+  panelGroup.add(test);
 }
 
 function makeSimplePolys(seeds, gw, gh) {
