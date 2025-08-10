@@ -129,25 +129,29 @@ function generatePanel() {
   panelGroup.add(back);
 
   // Build lead network first (extruded thin strips)
-  for (const e of edgesFromPolys(cellsPolys)) {
-    const strip = makeLeadStrip(e.a, e.b, 0.018, Z);
+  const leadEdges = edgesFromPolys(cellsPolys);
+  for (const e of leadEdges) {
+    const strip = makeLeadStrip(e.a, e.b, 0.026, Z + 0.01);
     const mesh = new THREE.Mesh(strip, leadMatBase);
+    mesh.position.z += 0.02;
     panelGroup.add(mesh);
     // thin highlight cap
-    const cap = makeLeadStrip(e.a, e.b, 0.008, Z + 0.004);
+    const cap = makeLeadStrip(e.a, e.b, 0.010, Z + 0.014);
     const capMesh = new THREE.Mesh(cap, leadMatTop);
-    capMesh.position.z += 0.002;
+    capMesh.position.z += 0.028;
     panelGroup.add(capMesh);
   }
 
   // Glass materials palette
   const pal = (window.PALETTES?.[0]?.inks) || [ '#5aa3c7', '#6bb0dd', '#2b7aa7', '#e9c675', '#e36a6a', '#8dc5b0' ];
 
-  // Build shapes and glass slabs
+  // Build shapes and glass slabs inset from the lead for visible borders
+  const insetFactor = 0.94;
   for (const poly of cellsPolys) {
+    const shrunk = shrinkPolygon(poly, insetFactor);
     const shape = new THREE.Shape();
-    shape.moveTo(poly[0][0], poly[0][1]);
-    for (let i = 1; i < poly.length; i++) shape.lineTo(poly[i][0], poly[i][1]);
+    shape.moveTo(shrunk[0][0], shrunk[0][1]);
+    for (let i = 1; i < shrunk.length; i++) shape.lineTo(shrunk[i][0], shrunk[i][1]);
     shape.closePath();
 
     const extrude = new THREE.ExtrudeGeometry(shape, { depth: Z, bevelEnabled: true, bevelSize: 0.0025, bevelThickness: 0.004, bevelSegments: 2 });
@@ -167,16 +171,17 @@ function generatePanel() {
       clearcoat: 0.3,
       clearcoatRoughness: 0.25,
       attenuationColor: col,
-      attenuationDistance: rrange(0.4, 1.0)
+      attenuationDistance: rrange(0.4, 1.0),
+      side: THREE.DoubleSide
     });
 
     const mesh = new THREE.Mesh(extrude, glass);
-    mesh.position.z -= Z/2; // center around 0
+    mesh.position.z -= Z/2 - 0.01;
     panelGroup.add(mesh);
   }
 
   // Lights
-  const hemi = new THREE.HemisphereLight(0xffffff, 0x223344, 0.5);
+  const hemi = new THREE.HemisphereLight(0xffffff, 0x223344, 0.6);
   scene.add(hemi);
   const area1 = new THREE.RectAreaLight(0xffffff, 3.0, 2.5, 2.5);
   area1.position.set(0.8, 0.9, 1.0);
@@ -184,6 +189,10 @@ function generatePanel() {
   const area2 = new THREE.RectAreaLight(0xfff3d0, 2.2, 3.0, 3.0);
   area2.position.set(-1.0, -0.8, 0.8);
   panelGroup.add(area2);
+  const backLight = new THREE.RectAreaLight(0xffffff, 4.0, 3.0, 3.0);
+  backLight.position.set(0, 0, -0.5);
+  backLight.lookAt(0, 0, 0);
+  panelGroup.add(backLight);
 
   // Debug: always add a visible test cube so we confirm rendering
   // remove debug cube now that we render
@@ -221,6 +230,12 @@ function edgesFromPolys(polys) {
     }
   }
   return edges;
+}
+
+function shrinkPolygon(poly, factor){
+  let cx = 0, cy = 0; for(const [x,y] of poly){ cx+=x; cy+=y; } cx/=poly.length; cy/=poly.length;
+  const out = []; for(const [x,y] of poly){ out.push([ cx + (x-cx)*factor, cy + (y-cy)*factor ]); }
+  return out;
 }
 
 function makeLeadStrip(a, b, width, height) {
